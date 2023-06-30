@@ -1,49 +1,51 @@
 import React, { useState } from "react";
-import Todos from "./Todos";
+import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
 import "./AddTodo.css";
+// eslint-disable-next-line
+import {
+  addTodo,
+  deleteTodo,
+  updateTodo as updateTodoAction,
+} from "../redux/action";
+import Todos from "./Todos";
 
 const AddTodo = () => {
   const [todo, setTodo] = useState({
     title: "",
     todo: "",
   });
-  const [todoObj, setTodoObj] = useState([]);
   const [updateTodo, setUpdateTodo] = useState(null);
   const newId = uuidv4();
+  const todoObj = useSelector((state) => state.todoObj);
+  const dispatch = useDispatch();
+
   const handleSubmit = (e) => {
     if (updateTodo) {
-      setTodoObj(
-        todoObj.map((toodo) =>
-          toodo.id === updateTodo ? { ...toodo, ...todo } : toodo
-        )
-      );
-      setTodo({
-        title: "",
-        todo: "",
-      });
+      const updatedTodo = { ...todo, id: updateTodo };
+      dispatch(updateTodoAction(updatedTodo));
+      setUpdateTodo(null);
     } else {
       const newTodo = { ...todo, id: newId };
-      setTodoObj([...todoObj, newTodo]);
-      setTodo({
-        title: "",
-        todo: "",
-      });
+      dispatch(addTodo(newTodo));
     }
-  };
-
-  const handleDelete = (id) => {
-    setTodoObj(todoObj.filter((todos) => todos.id !== id));
-  };
-
-  const handleUpdate = (todoo) => {
-    setUpdateTodo(todoo.id);
     setTodo({
-      title: todoo.title,
-      todo: todoo.todo,
+      title: "",
+      todo: "",
     });
   };
 
+  const handleDelete = (id) => {
+    dispatch(deleteTodo(id));
+  };
+
+  const handleUpdate = (todo) => {
+    setUpdateTodo(todo.id);
+    setTodo({
+      title: todo.title,
+      todo: todo.todo,
+    });
+  };
   return (
     <>
       <div className="container">
@@ -74,6 +76,9 @@ const AddTodo = () => {
         </div>
         <button
           type="submit"
+          disabled={
+            todo.title.length > 0 && todo.todo.length > 0 ? false : true
+          }
           onClick={handleSubmit}
           className="btn btn-primary"
         >
